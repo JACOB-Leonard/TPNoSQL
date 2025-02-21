@@ -138,3 +138,62 @@ function (keys, values) {
 }
 ```
 ---
+
+## 4. MapReduce avec CouchDB
+
+### 4.1 Représentation d'une matrice des pages web avec CouchDB
+
+Chaque document dans la base représente une ligne de la matrice M et suit le format :
+
+```json
+{
+  "_id": "page_1",
+  "liens": {"page_2": 0.5, "page_3": 0.3}
+}
+```
+
+### 4.2 Calcul de la norme des lignes avec MapReduce
+
+#### Fonction Map
+
+```javascript
+function (doc) {
+  var norme = 0;
+  for (var page in doc.liens) {
+    norme += Math.pow(doc.liens[page], 2);
+  }
+  emit(doc._id, Math.sqrt(norme));
+}
+```
+
+#### Fonction Reduce
+
+```javascript
+function (keys, values) {
+  return values;
+}
+```
+
+### 4.3 Produit Matrice-Vecteur avec MapReduce
+
+Le produit \( \phi = M \times W \) se calcule en utilisant :
+
+#### Fonction Map
+
+```javascript
+function (doc) {
+  for (var page in doc.liens) {
+    emit(page, doc.liens[page] * global_W[doc._id]);
+  }
+}
+```
+
+#### Fonction Reduce
+
+```javascript
+function (keys, values) {
+  return sum(values);
+}
+```
+
+Où `global_W` est un vecteur stocké en mémoire partagée.
